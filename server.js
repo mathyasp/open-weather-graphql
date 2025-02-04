@@ -9,7 +9,29 @@ require('dotenv').config()
 const apikey = process.env.OPENWEATHERMAP_API_KEY
 
 const schema = buildSchema(`
-# schema here
+  type Wind {
+    speed: Float
+    deg: Int
+    gust: Float
+  }
+
+  type Coordinates {
+    lat: Float
+    lon: Float
+  }
+
+  type Clouds {
+    all: Int
+  }
+
+  type System {
+    type: Int
+    country: String
+    id: Int
+    sunrise: Int
+    sunset: Int
+  }
+
   type Weather {
     temperature: Float
     description: String
@@ -18,8 +40,19 @@ const schema = buildSchema(`
     temp_max: Float
     pressure: Float
     humidity: Float
-    cod: Int
+    cod: String
     message: String
+    timezone: Int
+    name: String
+    id: Int
+    visibility: Int
+    wind: Wind
+    coord: Coordinates
+    clouds: Clouds
+    dt: Int
+    sys: System
+    sea_level: Float
+    grnd_level: Float
   }
 
   enum Units {
@@ -51,22 +84,42 @@ const root = {
         message: json.message
       }
     }
-    const temperature = json.main.temp
-    const description = json.weather[0].description
-    const feels_like = json.main.feels_like
-    const temp_min = json.main.temp_min
-    const temp_max = json.main.temp_max
-    const pressure = json.main.pressure
-    const humidity = json.main.humidity
+    
     return { 
-      temperature, 
-      description,
-      feels_like,
-      temp_min,
-      temp_max,
-      pressure,
-      humidity,
-      cod: json.cod,
+      temperature: json.main.temp,
+      description: json.weather[0].description,
+      feels_like: json.main.feels_like,
+      temp_min: json.main.temp_min,
+      temp_max: json.main.temp_max,
+      pressure: json.main.pressure,
+      humidity: json.main.humidity,
+      timezone: json.timezone,
+      name: json.name,
+      id: json.id,
+      visibility: json.visibility,
+      wind: {
+        speed: json.wind?.speed,
+        deg: json.wind?.deg,
+        gust: json.wind?.gust
+      },
+      coord: {
+        lat: json.coord?.lat,
+        lon: json.coord?.lon
+      },
+      clouds: {
+        all: json.clouds?.all
+      },
+      dt: json.dt,
+      sys: {
+        type: json.sys?.type,
+        country: json.sys?.country,
+        id: json.sys?.id,
+        sunrise: json.sys?.sunrise,
+        sunset: json.sys?.sunset
+      },
+      sea_level: json.main?.sea_level,
+      grnd_level: json.main?.grnd_level,
+      cod: json.cod.toString(),
       message: null
     }
   }

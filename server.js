@@ -15,14 +15,20 @@ const schema = buildSchema(`
     description: String!
   }
 
+  enum Units {
+    standard
+    metric
+    imperial
+  }
+
   type Query {
-    getWeather(zip: Int!): Weather!
+    getWeather(zip: Int!, units: Units): Weather!
   }
 `)
 
 const root = {
-  getWeather: async ({ zip }) => {
-    const url = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${apikey}`
+  getWeather: async ({ zip, units = 'imperial' }) => {
+    const url = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${apikey}&units=${units}`
     const res = await fetch(url)
     const json = await res.json()
     const temperature = json.main.temp

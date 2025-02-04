@@ -2,6 +2,7 @@
 const express = require('express')
 const { graphqlHTTP } = require('express-graphql')
 const { buildSchema } = require('graphql')
+const fetch = require('node-fetch')
 
 // require dotenv and call cofig
 require('dotenv').config()

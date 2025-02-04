@@ -21,7 +21,14 @@ const schema = buildSchema(`
 `)
 
 const root = {
-  // resolvers here
+  getWeather: async ({ zip }) => {
+    const url = `https://api.openweathermap.org/data/2.5/weather?zip=${zip}&appid=${apikey}`
+    const res = await fetch(url)
+    const json = await res.json()
+    const temperature = json.main.temp
+    const description = json.weather[0].description
+    return { temperature, description }
+  }
 }
 
 // Create an express app

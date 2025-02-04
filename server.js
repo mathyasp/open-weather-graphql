@@ -9,9 +9,14 @@ const apikey = process.env.OPENWEATHERMAP_API_KEY
 
 const schema = buildSchema(`
 # schema here
-type Test {
-  message: String!
-}
+  type Weather {
+    temperature: Float!
+    description: String!
+  }
+
+  type Query {
+    getWeather(zip: Int!): Weather!
+  }
 `)
 
 const root = {

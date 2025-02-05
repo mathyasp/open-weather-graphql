@@ -114,3 +114,26 @@
   margin: 0;
   cursor: pointer;
 }
+
+.location-inputs {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.location-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.location-button:hover {
+  background: #f5f5f5;
+}
+
+.location-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}

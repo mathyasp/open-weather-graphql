@@ -53,15 +53,79 @@ function Weather() {
     }
   }
 
+  async function getLocation() {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const formData = new FormData(formRef.current)
+          const unit = formData.get('unit')
+
+          const json = await client.query({
+            query: gql`
+              query GetWeatherByCoords($lat: Float!, $lon: Float!, $units: Units!) {
+                getWeatherByCoords(lat: $lat, lon: $lon, units: $units) {
+                  temperature
+                  description
+                  humidity
+                  temp_min
+                  temp_max
+                  feels_like
+                  cod
+                  message
+                }
+              }
+            `,
+            variables: {
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+              units: unit || 'imperial'
+            },
+            fetchPolicy: 'network-only'
+          })
+
+          if (json.data.getWeatherByCoords.cod !== "200") {
+            setError(json.data.getWeatherByCoords.message)
+            setWeather(null)
+          } else {
+            setWeather(json)
+            setError(null)
+          }
+        } catch(err) {
+          setError(err.message)
+          setWeather(null)
+        }
+      },
+      (err) => {
+        setError('Unable to retrieve location: ' + err.message)
+      }
+    )
+  }
+
+  const weatherData = weather?.data?.getWeather || weather?.data?.getWeatherByCoords;
+
   return (
     <div className="Weather">
       <form ref={formRef} className="weather-form" onSubmit={getWeather}>
-        <input 
-          className="zip-input"
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          placeholder="Enter ZIP code"
-        />
+        <div className="location-inputs">
+          <input 
+            className="zip-input"
+            value={zip}
+            onChange={(e) => setZip(e.target.value)}
+            placeholder="Enter ZIP code"
+          />
+          <button 
+            type="button" 
+            className="location-button"
+            onClick={getLocation}
+          >
+            📍 Use My Location
+          </button>
+        </div>
         <div className="unit-selector">
           <label>
             <input
@@ -93,21 +157,21 @@ function Weather() {
       {weather && !error && (
         <div className="weather-info">
           <div className="weather-main">
-            <h2>{weather.data.getWeather.temperature}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</h2>
-            <p className="description">{weather.data.getWeather.description}</p>
+            <h2>{weatherData.temperature}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</h2>
+            <p className="description">{weatherData.description}</p>
           </div>
           <div className="weather-details">
             <div className="detail-item">
               <span>Feels Like</span>
-              <strong>{weather.data.getWeather.feels_like}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
+              <strong>{weatherData.feels_like}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
             </div>
             <div className="detail-item">
               <span>Humidity</span>
-              <strong>{weather.data.getWeather.humidity}%</strong>
+              <strong>{weatherData.humidity}%</strong>
             </div>
             <div className="detail-item">
               <span>Min/Max</span>
-              <strong>{weather.data.getWeather.temp_min}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'} / {weather.data.getWeather.temp_max}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
+              <strong>{weatherData.temp_min}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'} / {weatherData.temp_max}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
             </div>
           </div>
         </div>

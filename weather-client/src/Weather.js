@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { gql } from '@apollo/client'
 import { client } from './index'
+import './Weather.css'
 
 function Weather() {
   const [ zip, setZip ] = useState('')
   const [ weather, setWeather ] = useState(null)
   const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   async function getWeather() {
     if (!zip) return
+    setLoading(true)
     setError(null)
       
     try {
@@ -42,42 +45,56 @@ function Weather() {
     } catch(err) {
       setError(err.message)
       setWeather(null)
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className="Weather">
+      <form className="weather-form" onSubmit={(e) => {
+        e.preventDefault()
+        getWeather()
+      }}>
+        <input 
+          className="zip-input"
+          value={zip}
+          onChange={(e) => setZip(e.target.value)}
+          placeholder="Enter ZIP code"
+        />
+        <button className="submit-button" type="submit" disabled={loading}>
+          {loading ? 'Loading...' : 'Get Weather'}
+        </button>
+      </form>
+
       {error && (
-        <div className="weather-error" style={{color: 'red'}}>
-          Error: {error}
+        <div className="weather-error">
+          <span className="error-icon">⚠️</span> {error}
         </div>
       )}
 
       {weather && !error && (
         <div className="weather-info">
-          <h2>Current Weather</h2>
+          <div className="weather-main">
+            <h2>{weather.data.getWeather.temperature}°F</h2>
+            <p className="description">{weather.data.getWeather.description}</p>
+          </div>
           <div className="weather-details">
-            <p>Temperature: {weather.data.getWeather.temperature}</p>
-            <p>Description: {weather.data.getWeather.description}</p>
-            <p>Humidity: {weather.data.getWeather.humidity}</p>
-            <p>Minimum Temp: {weather.data.getWeather.temp_min}</p>
-            <p>Maximum Temp: {weather.data.getWeather.temp_max}</p>
-            <p>Feels Like: {weather.data.getWeather.feels_like}</p>
+            <div className="detail-item">
+              <span>Feels Like</span>
+              <strong>{weather.data.getWeather.feels_like}°F</strong>
+            </div>
+            <div className="detail-item">
+              <span>Humidity</span>
+              <strong>{weather.data.getWeather.humidity}%</strong>
+            </div>
+            <div className="detail-item">
+              <span>Min/Max</span>
+              <strong>{weather.data.getWeather.temp_min}°F / {weather.data.getWeather.temp_max}°F</strong>
+            </div>
           </div>
         </div>
       )}
-      
-      <form onSubmit={(e) => {
-        e.preventDefault()
-        getWeather()
-      }}>
-        <input 
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          placeholder="Enter ZIP code"
-        />
-        <button type="submit">Get Weather</button>
-      </form>
     </div>
   )
 }

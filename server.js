@@ -3,6 +3,7 @@ const express = require('express')
 const { graphqlHTTP } = require('express-graphql')
 const { buildSchema } = require('graphql')
 const fetch = require('node-fetch')
+const cors = require('cors')
 
 // require dotenv and call cofig
 require('dotenv').config()
@@ -134,6 +135,8 @@ app.use('/graphql', graphqlHTTP({
   rootValue: root,
   graphiql: true
 }))
+
+app.use(cors())
 
 // Start this app
 const port = 4000

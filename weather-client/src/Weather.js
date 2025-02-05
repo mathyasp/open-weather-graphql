@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { gql } from '@apollo/client'
 import { client } from './index'
 import './Weather.css'
@@ -7,18 +7,21 @@ function Weather() {
   const [ zip, setZip ] = useState('')
   const [ weather, setWeather ] = useState(null)
   const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const formRef = useRef()
 
-  async function getWeather() {
+  async function getWeather(e) {
+    e.preventDefault()
     if (!zip) return
-    setLoading(true)
+    
+    const formData = new FormData(formRef.current)
+    const unit = formData.get('unit')
     setError(null)
       
     try {
       const json = await client.query({
         query: gql`
-          query GetWeather($zip: Int!) {
-            getWeather(zip: $zip) {
+          query GetWeather($zip: Int!, $units: Units!) {
+            getWeather(zip: $zip, units: $units) {
               temperature
               description
               humidity
@@ -31,8 +34,10 @@ function Weather() {
           }
         `,
         variables: {
-          zip: parseInt(zip, 10)
-        }
+          zip: parseInt(zip, 10),
+          units: unit
+        },
+        fetchPolicy: 'network-only'
       })
       
       if (json.data.getWeather.cod !== "200") {
@@ -45,25 +50,37 @@ function Weather() {
     } catch(err) {
       setError(err.message)
       setWeather(null)
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
     <div className="Weather">
-      <form className="weather-form" onSubmit={(e) => {
-        e.preventDefault()
-        getWeather()
-      }}>
+      <form ref={formRef} className="weather-form" onSubmit={getWeather}>
         <input 
           className="zip-input"
           value={zip}
           onChange={(e) => setZip(e.target.value)}
           placeholder="Enter ZIP code"
         />
-        <button className="submit-button" type="submit" disabled={loading}>
-          {loading ? 'Loading...' : 'Get Weather'}
+        <div className="unit-selector">
+          <label>
+            <input
+              type="radio"
+              name="unit"
+              value="imperial"
+              defaultChecked
+            /> °F
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="unit"
+              value="metric"
+            /> °C
+          </label>
+        </div>
+        <button className="submit-button" type="submit" >
+          Get Weather
         </button>
       </form>
 
@@ -76,13 +93,13 @@ function Weather() {
       {weather && !error && (
         <div className="weather-info">
           <div className="weather-main">
-            <h2>{weather.data.getWeather.temperature}°F</h2>
+            <h2>{weather.data.getWeather.temperature}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</h2>
             <p className="description">{weather.data.getWeather.description}</p>
           </div>
           <div className="weather-details">
             <div className="detail-item">
               <span>Feels Like</span>
-              <strong>{weather.data.getWeather.feels_like}°F</strong>
+              <strong>{weather.data.getWeather.feels_like}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
             </div>
             <div className="detail-item">
               <span>Humidity</span>
@@ -90,7 +107,7 @@ function Weather() {
             </div>
             <div className="detail-item">
               <span>Min/Max</span>
-              <strong>{weather.data.getWeather.temp_min}°F / {weather.data.getWeather.temp_max}°F</strong>
+              <strong>{weather.data.getWeather.temp_min}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'} / {weather.data.getWeather.temp_max}°{formRef.current?.unit?.value === 'metric' ? 'C' : 'F'}</strong>
             </div>
           </div>
         </div>

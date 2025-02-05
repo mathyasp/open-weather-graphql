@@ -96,3 +96,21 @@
   font-size: 1.1rem;
   color: #333;
 }
+
+.unit-selector {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.unit-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.unit-selector input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}

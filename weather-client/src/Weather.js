@@ -5,9 +5,11 @@ import { client } from './index'
 function Weather() {
   const [ zip, setZip ] = useState('')
   const [ weather, setWeather ] = useState(null)
+  const [error, setError] = useState(null)
 
   async function getWeather() {
     if (!zip) return
+    setError(null)
       
     try {
       const json = await client.query({
@@ -20,6 +22,8 @@ function Weather() {
               temp_min
               temp_max
               feels_like
+              cod
+              message
             }
           }
         `,
@@ -27,15 +31,29 @@ function Weather() {
           zip: parseInt(zip, 10)
         }
       })
-      setWeather(json)
+      
+      if (json.data.getWeather.cod !== "200") {
+        setError(json.data.getWeather.message)
+        setWeather(null)
+      } else {
+        setWeather(json)
+        setError(null)
+      }
     } catch(err) {
-      console.log(err.message)
+      setError(err.message)
+      setWeather(null)
     }
   }
 
   return (
     <div className="Weather">
-      {weather && (
+      {error && (
+        <div className="weather-error" style={{color: 'red'}}>
+          Error: {error}
+        </div>
+      )}
+
+      {weather && !error && (
         <div className="weather-info">
           <h2>Current Weather</h2>
           <div className="weather-details">
